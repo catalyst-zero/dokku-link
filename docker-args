@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+
+APP="$1"
+LINK_FILE="LINK"
+LINK_FILE_PATH="/home/dokku/$APP/$LINK_FILE"
+
+if [[ -f "$LINK_FILE_PATH" ]]; then
+  while read line
+  do
+    app_name_to_link=$(docker ps -a | grep app/$line:latest |  awk '{print $NF}')
+    output="$output -link $app_name_to_link:$line"
+  done < $LINK_FILE_PATH
+
+  echo "$output"
+fi

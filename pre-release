@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+
+APP="$1"
+LINK_FILE="LINK"
+LINK_FILE_PATH="/home/dokku/$APP/$LINK_FILE"
+
+if [[ -f "$LINK_FILE_PATH" ]]; then
+  while read line
+  do
+    app_name_to_link=$(docker ps -a | grep app/$line:latest |  awk '{print $NF}')
+    output="$output -link $app_name_to_link:$line"
+  done < $LINK_FILE_PATH
+
+  echo "$output"
+fi
+root@idi:/var/lib/dokku/plugins# cat link/pre-release
+#!/usr/bin/env bash
+
+APP="$1";
+LINK_FILE="LINK"
+LINK_FILE_PATH="$DOKKU_ROOT/$APP/$LINK_FILE"
+
+# Create ENV vars only if there is a link file.
+if [[ -f "$LINK_FILE_PATH" ]]; then
+  # Read each line of the link file. $LINE actually is the app name to link
+  # into a container.
+  while read LINE
+  do
+    # Get container id and docker image.
+    APP_ID_TO_LINK=$(docker ps -a | grep app/$LINE:latest |  awk '{print $1}')
+    APP_IMAGE_TO_LINK="app/$LINE:latest"
+
+    # Create ENV vars only if there is a container id.
+    if [[ -n "$APP_ID_TO_LINK" ]]; then
+        # Get container ip and port.
+        IP=$(docker inspect $APP_ID_TO_LINK | grep IPAddress | awk '{ print $2 }' | tr -d ',"' | head -1)
+        PORT=5000
+
+        # Write APP_CONNECTION to app's ENV file
+        APP_CONNECTION="$(echo $LINE | awk '{print toupper($0)}')_CONNECTION=$IP:$PORT"
+
+        if [[ ! -f "$DOKKU_ROOT/$APP/ENV" ]]; then
+          touch "$DOKKU_ROOT/$APP/ENV"
+        fi
+
+        cat "$DOKKU_ROOT/$APP/ENV" | grep "$APP_CONNECTION" || echo "export $APP_CONNECTION" >> "$DOKKU_ROOT/$APP/ENV"
+
+        echo
+        echo "-----> $APP linked to $APP_IMAGE_TO_LINK container"
+    fi
+  done < $LINK_FILE_PATH
+fi
