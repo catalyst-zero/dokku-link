@@ -21,7 +21,8 @@ if [[ -f "$LINK_FILE_PATH" ]]; then
         PORT=5000
 
         # Write APP_CONNECTION to app's ENV file
-        APP_CONNECTION="$(echo $LINE | awk '{print toupper($0)}')_CONNECTION=$IP:$PORT"
+        RAW_APP_NAME=${LINE%%.*}
+        APP_CONNECTION="$(echo $RAW_APP_NAME | awk '{print toupper($0)}')_CONNECTION=$IP:$PORT"
 
         if [[ ! -f "$DOKKU_ROOT/$APP/ENV" ]]; then
           touch "$DOKKU_ROOT/$APP/ENV"

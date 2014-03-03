@@ -16,3 +16,13 @@ the dependency and need to be created first. Just do `echo "B" >
 [redeploy](https://github.com/scottatron/dokku-rebuild) your app. Now A is able
 to access a ENV var `B_CONNECTION` that will look something like
 `172.17.0.85:5000`.
+
+## environments
+
+Long story short, you can always use the `APP_CONNECTION` ENV var.
+
+Having applications for different environments leads to app names like
+`A.staging`, `B.development`, etc.. Linking to `app.environment` will strip the
+`.environment` part. In that way you always can access the connection ENV var
+`APP_CONNECTION`. Otherwise things would be complicated having different names
+for that ENV var like `APP_STAGING_CONNECTION`, etc..
