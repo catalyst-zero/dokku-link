@@ -10,19 +10,26 @@ if [[ -f "$LINK_FILE_PATH" ]]; then
   # into a container.
   while read LINE
   do
+    # Parse app name and port.
+    APP_NAME=${LINE%:*}
+    APP_PORT=${LINE#*:}
+
+    if [ "$APP_NAME" = "$APP_PORT" ]; then
+        APP_PORT=5000
+    fi
+
     # Get container id and docker image.
-    APP_ID_TO_LINK=$(docker ps -a | grep app/$LINE:latest |  awk '{print $1}')
-    APP_IMAGE_TO_LINK="app/$LINE:latest"
+    APP_ID_TO_LINK=$(docker ps -a | grep app/$APP_NAME:latest |  awk '{print $1}')
+    APP_IMAGE_TO_LINK="app/$APP_NAME:latest"
 
     # Create ENV vars only if there is a container id.
     if [[ -n "$APP_ID_TO_LINK" ]]; then
         # Get container ip and port.
         IP=$(docker inspect $APP_ID_TO_LINK | grep IPAddress | awk '{ print $2 }' | tr -d ',"' | head -1)
-        PORT=5000
 
         # Write APP_CONNECTION to app's ENV file
-        RAW_APP_NAME=${LINE%%.*}
-        APP_CONNECTION="$(echo $RAW_APP_NAME | awk '{print toupper($0)}')_CONNECTION=$IP:$PORT"
+        RAW_APP_NAME=${APP_NAME%%.*}
+        APP_CONNECTION="$(echo $RAW_APP_NAME | awk '{print toupper($0)}')_CONNECTION=$IP:$APP_PORT"
 
         if [[ ! -f "$DOKKU_ROOT/$APP/ENV" ]]; then
           touch "$DOKKU_ROOT/$APP/ENV"

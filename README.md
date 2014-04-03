@@ -17,6 +17,11 @@ the dependency and need to be created first. Just do `echo "B" >
 to access a ENV var `B_CONNECTION` that will look something like
 `172.17.0.85:5000`.
 
+## ports
+
+It is possible to link more dinamically. `echo "B:PORT" > /home/dokku/A/LINK`.
+If `PORT` is not given, the default port `5000` will be used.
+
 ## environments
 
 Long story short, you can always use the `APP_CONNECTION` ENV var.
